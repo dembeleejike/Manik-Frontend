@@ -1,4 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import ProductPage from "./ProductPage";
+import { C, WHATSAPP_NUMBER, ImageSlot, Loading, SolidBtn, Field, inputStyle, QuoteForm } from "./shared";
 import {
   Menu, X, Phone, MessageCircle, MapPin, Clock, ChevronRight, ArrowRight,
   CheckCircle2, Package, Wrench, Truck, Users, Building2, Layers,
@@ -16,20 +19,6 @@ import { api } from "./api";
    Safety     #E2591F  primary accent (hazard-orange, not clay/terracotta)
    Blueprint  #133A55  secondary accent, technical blue
 ------------------------------------------------------------------ */
-const C = {
-  ink: "#171A1C",
-  steel: "#21262B",
-  steelLine: "#3A4148",
-  concrete: "#EFEBE3",
-  concreteD: "#E4DFD3",
-  alu: "#AFB6BC",
-  aluLight: "#C7CCD1",
-  safety: "#E2591F",
-  safetyDark: "#B8430F",
-  blueprint: "#133A55",
-  cream: "#F7F5F0",
-};
-
 const FONTS = (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
@@ -78,7 +67,6 @@ const SERVICES = [
   { icon: Users, name: "Consultation", desc: "Guidance on the right materials, finishes and specs for your project." },
 ];
 
-const WHATSAPP_NUMBER = "2348060984868";
 
 /* ---------------------------------------------------------------
    SMALL UI PRIMITIVES
@@ -116,18 +104,6 @@ function Stamp({ children, onClick, small }) {
   );
 }
 
-function SolidBtn({ children, onClick, icon: Icon }) {
-  return (
-    <button
-      onClick={onClick}
-      className="ff-body inline-flex items-center gap-2 px-6 py-3 text-sm font-medium transition-opacity hover:opacity-90"
-      style={{ background: C.safety, color: "white" }}
-    >
-      {children} {Icon && <Icon size={16} />}
-    </button>
-  );
-}
-
 function GhostBtn({ children, onClick, dark }) {
   return (
     <button
@@ -142,30 +118,6 @@ function GhostBtn({ children, onClick, dark }) {
 
 // Shows the first real photo if one exists, otherwise an honest
 // placeholder — never a stock/demo photo standing in for the real thing.
-function ImageSlot({ src, alt, height = 180 }) {
-  if (src) {
-    return (
-      <div className="overflow-hidden" style={{ height, background: C.concreteD }}>
-        <img src={src} alt={alt} className="w-full h-full object-cover" loading="lazy" />
-      </div>
-    );
-  }
-  return (
-    <div className="flex flex-col items-center justify-center gap-2 ff-mono text-[10px] uppercase tracking-widest" style={{ height, background: C.concreteD, color: "#8A877D" }}>
-      <ImageOff size={18} />
-      Photo pending
-    </div>
-  );
-}
-
-function Loading() {
-  return (
-    <div className="py-24 text-center ff-mono text-xs uppercase tracking-widest" style={{ color: "#8A877D" }}>
-      Loading…
-    </div>
-  );
-}
-
 function LoadError({ message }) {
   return (
     <div className="py-24 text-center max-w-md mx-auto">
@@ -187,7 +139,7 @@ function EmptyState({ message }) {
 /* ---------------------------------------------------------------
    HEADER / FOOTER
 ------------------------------------------------------------------ */
-function Header({ page, setPage, menuOpen, setMenuOpen, settings }) {
+function Header({ page, setPage, menuOpen, setMenuOpen }) {
   const links = [
     ["home", "Home"], ["products", "Products"], ["services", "Services"],
     ["projects", "Projects"], ["about", "About"], ["contact", "Contact"],
@@ -197,7 +149,7 @@ function Header({ page, setPage, menuOpen, setMenuOpen, settings }) {
       <div className="max-w-6xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
         <button onClick={() => { setPage("home"); setMenuOpen(false); }} className="flex items-center gap-2">
           <span style={{ width: 10, height: 10, background: C.safety }} />
-          <span className="ff-display text-lg tracking-tight font-semibold" style={{ color: C.cream }}>{settings?.businessName || "MANIK"}</span>
+          <span className="ff-display text-lg tracking-tight font-semibold" style={{ color: C.cream }}>MANIK</span>
         </button>
         <nav className="hidden md:flex items-center gap-7">
           {links.map(([id, label]) => (
@@ -325,153 +277,17 @@ function ProductCard({ p, onOpen }) {
           ))}
         </div>
       )}
-      <button onClick={() => onOpen(p)} className="mt-auto ff-mono text-xs uppercase tracking-wide inline-flex items-center gap-1.5 self-start px-4 py-2" style={{ border: `1px solid ${C.ink}`, color: C.ink }}>
-        Request price <ChevronRight size={13} />
-      </button>
-    </div>
-  );
-}
-
-/* ---------------------------------------------------------------
-   QUOTE FORM — the killer feature
------------------------------------------------------------------- */
-const REQUEST_TYPES = ["Material", "Fabrication", "Installation", "Delivery", "Full project"];
-
-function QuoteForm({ presetProduct, products = [] }) {
-  const [form, setForm] = useState({
-    requestType: "Material", name: "", phone: "", product: presetProduct || "", qty: "", location: "", notes: "", contact: "WhatsApp",
-  });
-  const [sent, setSent] = useState(false);
-  const [err, setErr] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  const update = (k, v) => setForm(f => ({ ...f, [k]: v }));
-
-  const waLink = useMemo(() => {
-    const text = `Quote request (${form.requestType})\nName: ${form.name}\nPhone: ${form.phone}\nProduct: ${form.product}\nQuantity: ${form.qty}\nLocation: ${form.location}\nNotes: ${form.notes}\nPreferred contact: ${form.contact}`;
-    return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
-  }, [form]);
-
-  const submit = async () => {
-    if (!form.name.trim() || !form.phone.trim()) {
-      setErr("Fill in your name and phone number before sending.");
-      return;
-    }
-    if (form.requestType === "Material" && !form.product.trim()) {
-      setErr("Let us know which product you need.");
-      return;
-    }
-    setErr("");
-    setSubmitting(true);
-    try {
-      await api.submitQuote({
-        requestType: form.requestType,
-        name: form.name,
-        phone: form.phone,
-        product: form.product,
-        quantity: form.qty,
-        location: form.location,
-        notes: form.notes,
-        preferredContact: form.contact,
-      });
-      setSent(true);
-    } catch (e) {
-      setErr("Couldn't send that just now — check your connection and try again, or use WhatsApp below.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  if (sent) {
-    return (
-      <div className="p-8 flex flex-col items-center text-center" style={{ background: C.cream, border: `1px solid ${C.ink}22` }}>
-        <CheckCircle2 size={36} style={{ color: C.safety }} className="mb-4" />
-        <h3 className="ff-display text-xl font-semibold mb-2" style={{ color: C.ink }}>Request received</h3>
-        <p className="ff-body text-sm mb-6 max-w-sm" style={{ color: "#54524C" }}>
-          Your request has been sent — we'll get back to you shortly. You can also reach us directly on WhatsApp:
-        </p>
-        <a href={waLink} target="_blank" rel="noreferrer" className="ff-body inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white" style={{ background: "#25D366" }}>
-          <MessageCircle size={16} /> Message on WhatsApp
-        </a>
-        <button onClick={() => setSent(false)} className="ff-mono text-xs uppercase tracking-wide mt-6 underline" style={{ color: "#6B6960" }}>Send another request</button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="p-6 md:p-8" style={{ background: C.cream, border: `1px solid ${C.ink}22` }}>
-      <Field label="What do you need?">
-        <div className="flex flex-wrap gap-2 mb-1">
-          {REQUEST_TYPES.map(t => (
-            <button key={t} onClick={() => update("requestType", t)} className="ff-mono text-xs uppercase px-3 py-2" style={{ border: `1px solid ${form.requestType === t ? C.safety : "#C9C5BA"}`, color: form.requestType === t ? C.safety : "#6B6960" }}>
-              {t}
-            </button>
-          ))}
-        </div>
-      </Field>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
-        <Field label="Name">
-          <input value={form.name} onChange={e => update("name", e.target.value)} placeholder="Your full name" className="w-full" style={inputStyle} />
-        </Field>
-        <Field label="Phone number">
-          <input value={form.phone} onChange={e => update("phone", e.target.value)} placeholder="080..." className="w-full" style={inputStyle} />
-        </Field>
-        <Field label={form.requestType === "Material" ? "Product" : "Product (if applicable)"}>
-          {products.length > 0 ? (
-            <select value={form.product} onChange={e => update("product", e.target.value)} className="w-full" style={inputStyle}>
-              <option value="">Select a product</option>
-              {products.map(p => <option key={p._id} value={p.name}>{p.name}</option>)}
-            </select>
-          ) : (
-            <input value={form.product} onChange={e => update("product", e.target.value)} placeholder="What are you looking for?" className="w-full" style={inputStyle} />
-          )}
-        </Field>
-        <Field label="Quantity">
-          <input value={form.qty} onChange={e => update("qty", e.target.value)} placeholder="e.g. 20 pieces" className="w-full" style={inputStyle} />
-        </Field>
-        {form.requestType !== "Material" && (
-          <Field label="Project location" full>
-            <input value={form.location} onChange={e => update("location", e.target.value)} placeholder="Where is the work/delivery needed?" className="w-full" style={inputStyle} />
-          </Field>
-        )}
-        <Field label="Additional requirements" full>
-          <textarea value={form.notes} onChange={e => update("notes", e.target.value)} placeholder="Colour, size, delivery location, timeline..." rows={3} className="w-full" style={inputStyle} />
-        </Field>
-        <Field label="Preferred contact method" full>
-          <div className="flex gap-3">
-            {["WhatsApp", "Phone call", "Email"].map(m => (
-              <button key={m} onClick={() => update("contact", m)} className="ff-mono text-xs uppercase px-3 py-2" style={{ border: `1px solid ${form.contact === m ? C.safety : "#C9C5BA"}`, color: form.contact === m ? C.safety : "#6B6960" }}>
-                {m}
-              </button>
-            ))}
-          </div>
-        </Field>
-      </div>
-      {err && <p className="ff-body text-sm mt-4" style={{ color: "#B8430F" }}>{err}</p>}
-      <div className="mt-6">
-        <SolidBtn onClick={submit} icon={Send}>{submitting ? "Sending…" : "Send request"}</SolidBtn>
+      <div className="mt-auto flex flex-wrap gap-3 items-center">
+        <button onClick={() => onOpen(p)} className="ff-mono text-xs uppercase tracking-wide inline-flex items-center gap-1.5 self-start px-4 py-2" style={{ border: `1px solid ${C.ink}`, color: C.ink }}>
+          Request price <ChevronRight size={13} />
+        </button>
+        <Link to={`/products/${p.ref}`} className="ff-mono text-xs uppercase tracking-wide underline" style={{ color: C.blueprint }}>
+          View full details
+        </Link>
       </div>
     </div>
   );
 }
-
-function Field({ label, children, full }) {
-  return (
-    <div className={full ? "md:col-span-2" : ""}>
-      <label className="ff-mono text-xs uppercase tracking-wide block mb-2" style={{ color: "#6B6960" }}>{label}</label>
-      {children}
-    </div>
-  );
-}
-
-const inputStyle = {
-  fontFamily: "'IBM Plex Sans', sans-serif",
-  fontSize: 14,
-  padding: "10px 12px",
-  border: "1px solid #C9C5BA",
-  background: "white",
-  color: "#171A1C",
-};
 
 /* ---------------------------------------------------------------
    PAGES
@@ -494,11 +310,14 @@ function Home({ setPage, openProduct, products, categories, projects, loading, s
             <SolidBtn onClick={() => setPage("products")} icon={ArrowRight}>Explore products</SolidBtn>
             <GhostBtn onClick={() => setPage("contact")} dark>Request a quote</GhostBtn>
           </div>
-          {/* TODO: Replace with a strong real photo of MANIK's shop, aluminium profiles, windows or completed work. */}
           <div className="mt-10 max-w-2xl overflow-hidden" style={{ border: `1px solid ${C.steelLine}` }}>
-            <div className="w-full h-56 md:h-72 flex flex-col items-center justify-center gap-2 ff-mono text-xs uppercase tracking-widest" style={{ background: C.steelLine, color: C.aluLight }}>
-              <ImageOff size={22} /> Hero photo pending
-            </div>
+            {settings?.heroImageUrl ? (
+              <img src={settings.heroImageUrl} alt={settings?.businessName || "MANIK"} className="w-full h-56 md:h-72 object-cover" />
+            ) : (
+              <div className="w-full h-56 md:h-72 flex flex-col items-center justify-center gap-2 ff-mono text-xs uppercase tracking-widest" style={{ background: C.steelLine, color: C.aluLight }}>
+                <ImageOff size={22} /> Hero photo pending
+              </div>
+            )}
           </div>
         </div>
         <div style={{ borderTop: `1px solid ${C.steelLine}` }}>
@@ -815,7 +634,7 @@ function Contact({ products, settings }) {
               <iframe
                 src={settings.mapEmbedUrl}
                 width="100%" height="200" style={{ border: 0 }}
-                loading="lazy" title={`${settings?.businessName || "MANIK"} location map`}
+                loading="lazy" title="MANIK location map"
               />
             </div>
           )}
@@ -828,7 +647,7 @@ function Contact({ products, settings }) {
 /* ---------------------------------------------------------------
    ROOT
 ------------------------------------------------------------------ */
-export default function App() {
+function MainApp() {
   const [page, setPageRaw] = useState("home");
   const [presetCat, setPresetCat] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -882,10 +701,24 @@ export default function App() {
     window.scrollTo?.({ top: 0, behavior: "instant" });
   };
 
+  // A lightweight per-section title update — helps the browser tab and any
+  // link preview that executes JS, even though this stays a single URL.
+  useEffect(() => {
+    const titles = {
+      home: "MANIK | Aluminium & Building Materials",
+      products: "Products — MANIK",
+      services: "Services — MANIK",
+      projects: "Projects — MANIK",
+      about: "About — MANIK",
+      contact: "Contact — MANIK",
+    };
+    document.title = titles[page] || titles.home;
+  }, [page]);
+
   return (
     <div className="ff-body min-h-screen" style={{ background: C.concrete }}>
       {FONTS}
-      <Header page={page} setPage={setPage} menuOpen={menuOpen} setMenuOpen={setMenuOpen} settings={settings} />
+      <Header page={page} setPage={setPage} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
       {loadError ? (
         <LoadError message={loadError} />
       ) : (
@@ -902,5 +735,20 @@ export default function App() {
       <WhatsAppFloat settings={settings} />
       <ProductModal product={modalProduct} onClose={() => setModalProduct(null)} products={products} />
     </div>
+  );
+}
+
+// The site's internal navigation (Home/Products/Services/etc.) is unchanged
+// above — it still works exactly as it always has. This just adds ONE new,
+// real, shareable URL per product alongside it: /products/:ref.
+// Everything else still lives at "/", switching sections internally.
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/products/:ref" element={<ProductPage />} />
+        <Route path="/*" element={<MainApp />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
