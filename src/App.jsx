@@ -187,7 +187,7 @@ function EmptyState({ message }) {
 /* ---------------------------------------------------------------
    HEADER / FOOTER
 ------------------------------------------------------------------ */
-function Header({ page, setPage, menuOpen, setMenuOpen }) {
+function Header({ page, setPage, menuOpen, setMenuOpen, settings }) {
   const links = [
     ["home", "Home"], ["products", "Products"], ["services", "Services"],
     ["projects", "Projects"], ["about", "About"], ["contact", "Contact"],
@@ -197,7 +197,7 @@ function Header({ page, setPage, menuOpen, setMenuOpen }) {
       <div className="max-w-6xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
         <button onClick={() => { setPage("home"); setMenuOpen(false); }} className="flex items-center gap-2">
           <span style={{ width: 10, height: 10, background: C.safety }} />
-          <span className="ff-display text-lg tracking-tight font-semibold" style={{ color: C.cream }}>MANIK</span>
+          <span className="ff-display text-lg tracking-tight font-semibold" style={{ color: C.cream }}>{settings?.businessName || "MANIK"}</span>
         </button>
         <nav className="hidden md:flex items-center gap-7">
           {links.map(([id, label]) => (
@@ -815,7 +815,7 @@ function Contact({ products, settings }) {
               <iframe
                 src={settings.mapEmbedUrl}
                 width="100%" height="200" style={{ border: 0 }}
-                loading="lazy" title="MANIK location map"
+                loading="lazy" title={`${settings?.businessName || "MANIK"} location map`}
               />
             </div>
           )}
@@ -885,7 +885,7 @@ export default function App() {
   return (
     <div className="ff-body min-h-screen" style={{ background: C.concrete }}>
       {FONTS}
-      <Header page={page} setPage={setPage} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+      <Header page={page} setPage={setPage} menuOpen={menuOpen} setMenuOpen={setMenuOpen} settings={settings} />
       {loadError ? (
         <LoadError message={loadError} />
       ) : (
