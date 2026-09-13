@@ -235,8 +235,9 @@ function Header({ page, setPage, menuOpen, setMenuOpen }) {
 
 function Footer({ setPage, settings }) {
   const phone = settings?.phone || "+234 806 098 4868";
+  const phone2 = settings?.phone2 || "";
   const email = settings?.email || "hello@manikmaterials.ng";
-  const address = settings?.address || "Gwaraka, Aluminum Village, Habitat Plaza";
+  const locations = settings?.locations?.length ? settings.locations : [{ label: "", address: "Gwaraka, Aluminum Village, Habitat Plaza" }];
   const hours = settings?.hours || "Mon – Sat, 8am – 6pm";
   const hoursSunday = settings?.hoursSunday || "Closed";
   return (
@@ -247,7 +248,7 @@ function Footer({ setPage, settings }) {
             <span style={{ width: 10, height: 10, background: C.safety }} />
             <span className="ff-display text-lg font-semibold" style={{ color: C.cream }}>{settings?.businessName || "MANIK"}</span>
           </div>
-          <p className="ff-body text-sm leading-relaxed">Aluminium and building materials for modern construction. Supply, fabrication and installation.</p>
+          <p className="ff-body text-sm leading-relaxed">{settings?.tagline || "Aluminium and building materials for modern construction. Supply, fabrication and installation."}</p>
         </div>
         <div>
           <p className="ff-mono text-xs uppercase tracking-widest mb-4" style={{ color: C.safety }}>Sitemap</p>
@@ -257,9 +258,11 @@ function Footer({ setPage, settings }) {
         </div>
         <div>
           <p className="ff-mono text-xs uppercase tracking-widest mb-4" style={{ color: C.safety }}>Contact</p>
-          <p className="ff-body text-sm mb-2 flex items-center gap-2"><Phone size={14} /> {phone}</p>
+          <p className="ff-body text-sm mb-2 flex items-center gap-2"><Phone size={14} /> {phone}{phone2 && ` / ${phone2}`}</p>
           <p className="ff-body text-sm mb-2 flex items-center gap-2"><Mail size={14} /> {email}</p>
-          <p className="ff-body text-sm flex items-start gap-2"><MapPin size={14} className="mt-1" /> {address}</p>
+          {locations.map((loc, i) => (
+            <p key={i} className="ff-body text-sm flex items-start gap-2 mb-1"><MapPin size={14} className="mt-1 shrink-0" /> {loc.label && <strong>{loc.label}: </strong>}{loc.address}</p>
+          ))}
         </div>
         <div>
           <p className="ff-mono text-xs uppercase tracking-widest mb-4" style={{ color: C.safety }}>Hours</p>
@@ -780,9 +783,11 @@ function About({ setPage, settings }) {
 function Contact({ products, settings }) {
   const address = settings?.address || "Gwaraka, Aluminum Village, Habitat Plaza";
   const phone = settings?.phone || "+234 806 098 4868";
+  const phone2 = settings?.phone2 || "";
   const email = settings?.email || "hello@manikmaterials.ng";
   const hours = settings?.hours || "Mon – Sat, 8am – 6pm";
   const whatsapp = settings?.whatsapp || WHATSAPP_NUMBER;
+  const locations = settings?.locations?.length ? settings.locations : [{ label: "", address: "Gwaraka, Aluminum Village, Habitat Plaza" }];
   return (
     <div className="max-w-6xl mx-auto px-5 md:px-8 py-16">
       <SectionHead eyebrow="GET IN TOUCH" title="Request a quote" sub="Tell us what you need — quantity, colour, size, deadline — and we'll get back to you." />
@@ -793,8 +798,12 @@ function Contact({ products, settings }) {
         <div className="space-y-6">
           <div className="p-6" style={{ background: C.concreteD }}>
             <p className="ff-mono text-xs uppercase tracking-widest mb-4" style={{ color: C.safety }}>Visit us</p>
-            <p className="ff-body text-sm mb-3 flex items-start gap-2" style={{ color: C.ink }}><MapPin size={15} className="mt-0.5 shrink-0" /> {address}</p>
-            <p className="ff-body text-sm mb-3 flex items-center gap-2" style={{ color: C.ink }}><Phone size={15} /> {phone}</p>
+            {locations.map((loc, i) => (
+              <p key={i} className="ff-body text-sm mb-3 flex items-start gap-2" style={{ color: C.ink }}>
+                <MapPin size={15} className="mt-0.5 shrink-0" /> {loc.label && <strong>{loc.label}: </strong>}{loc.address}
+              </p>
+            ))}
+            <p className="ff-body text-sm mb-3 flex items-center gap-2" style={{ color: C.ink }}><Phone size={15} /> {phone}{phone2 && ` / ${phone2}`}</p>
             <p className="ff-body text-sm mb-3 flex items-center gap-2" style={{ color: C.ink }}><Mail size={15} /> {email}</p>
             <p className="ff-body text-sm flex items-center gap-2" style={{ color: C.ink }}><Clock size={15} /> {hours}</p>
           </div>
