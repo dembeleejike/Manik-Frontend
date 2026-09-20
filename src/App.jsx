@@ -629,15 +629,18 @@ function Contact({ products, settings }) {
           <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 p-4 text-sm font-medium text-white" style={{ background: "#25D366" }}>
             <MessageCircle size={16} /> Chat on WhatsApp
           </a>
-          {settings?.mapEmbedUrl && (
-            <div className="overflow-hidden" style={{ border: `1px solid ${C.ink}22` }}>
-              <iframe
-                src={settings.mapEmbedUrl}
-                width="100%" height="200" style={{ border: 0 }}
-                loading="lazy" title="MANIK location map"
-              />
+          {locations.filter(loc => loc.mapEmbedUrl).map((loc, i) => (
+            <div key={i}>
+              {loc.label && <p className="ff-mono text-xs uppercase tracking-wide mb-2" style={{ color: "#6B6960" }}>{loc.label}</p>}
+              <div className="overflow-hidden" style={{ border: `1px solid ${C.ink}22` }}>
+                <iframe
+                  src={loc.mapEmbedUrl}
+                  width="100%" height="200" style={{ border: 0 }}
+                  loading="lazy" title={loc.label || "MANIK location map"}
+                />
+              </div>
             </div>
-          )}
+          ))}
         </div>
       </div>
     </div>
