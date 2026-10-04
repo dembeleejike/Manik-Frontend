@@ -79,9 +79,9 @@ export const inputStyle = {
 
 const REQUEST_TYPES = ["Material", "Fabrication", "Installation", "Delivery", "Full project"];
 
-export function QuoteForm({ presetProduct, products = [] }) {
+export function QuoteForm({ presetProduct, products = [], whatsapp = WHATSAPP_NUMBER }) {
   const [form, setForm] = useState({
-    requestType: "Material", name: "", phone: "", product: presetProduct || "", qty: "", location: "", notes: "", contact: "WhatsApp",
+    requestType: "Material", name: "", phone: "", product: presetProduct || "", qty: "", location: "", notes: "", contact: "WhatsApp", website: "",
   });
   const [sent, setSent] = useState(false);
   const [err, setErr] = useState("");
@@ -91,8 +91,8 @@ export function QuoteForm({ presetProduct, products = [] }) {
 
   const waLink = useMemo(() => {
     const text = `Quote request (${form.requestType})\nName: ${form.name}\nPhone: ${form.phone}\nProduct: ${form.product}\nQuantity: ${form.qty}\nLocation: ${form.location}\nNotes: ${form.notes}\nPreferred contact: ${form.contact}`;
-    return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
-  }, [form]);
+    return `https://wa.me/${whatsapp}?text=${encodeURIComponent(text)}`;
+  }, [form, whatsapp]);
 
   const submit = async () => {
     if (!form.name.trim() || !form.phone.trim()) {
@@ -115,6 +115,7 @@ export function QuoteForm({ presetProduct, products = [] }) {
         location: form.location,
         notes: form.notes,
         preferredContact: form.contact,
+        website: form.website, // hidden spam trap — stays empty for real visitors
       });
       setSent(true);
     } catch (e) {
@@ -142,6 +143,12 @@ export function QuoteForm({ presetProduct, products = [] }) {
 
   return (
     <div className="p-6 md:p-8" style={{ background: C.cream, border: `1px solid ${C.ink}22` }}>
+      {/* Spam trap: invisible to people, tempting to bots. Anything typed here is silently discarded by the server. */}
+      <input
+        type="text" name="website" value={form.website} onChange={e => update("website", e.target.value)}
+        tabIndex={-1} autoComplete="off" aria-hidden="true"
+        style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+      />
       <Field label="What do you need?">
         <div className="flex flex-wrap gap-2 mb-1">
           {REQUEST_TYPES.map(t => (

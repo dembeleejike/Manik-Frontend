@@ -90,7 +90,7 @@ export default function ProductPage() {
             )}
 
             <p className="ff-mono text-xs uppercase tracking-wide mb-3" style={{ color: "#6B6960" }}>Request a price for this item</p>
-            <QuoteForm presetProduct={product.name} products={products} />
+            <QuoteForm presetProduct={product.name} products={products} whatsapp={settings?.whatsapp || WHATSAPP_NUMBER} />
 
             <a
               href={`https://wa.me/${settings?.whatsapp || WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hello, I'm interested in ${product.name} (${product.ref}). Please send me the price.`)}`}

@@ -188,7 +188,7 @@ function Header({ page, setPage, menuOpen, setMenuOpen }) {
 function Footer({ setPage, settings }) {
   const phone = settings?.phone || "+234 806 098 4868";
   const phone2 = settings?.phone2 || "";
-  const email = settings?.email || "hello@manikmaterials.ng";
+  const email = settings?.email || "";
   const locations = settings?.locations?.length ? settings.locations : [{ label: "", address: "Gwaraka, Aluminum Village, Habitat Plaza" }];
   const hours = settings?.hours || "Mon – Sat, 8am – 6pm";
   const hoursSunday = settings?.hoursSunday || "Closed";
@@ -211,7 +211,7 @@ function Footer({ setPage, settings }) {
         <div>
           <p className="ff-mono text-xs uppercase tracking-widest mb-4" style={{ color: C.safety }}>Contact</p>
           <p className="ff-body text-sm mb-2 flex items-center gap-2"><Phone size={14} /> {phone}{phone2 && ` / ${phone2}`}</p>
-          <p className="ff-body text-sm mb-2 flex items-center gap-2"><Mail size={14} /> {email}</p>
+          {email && <p className="ff-body text-sm mb-2 flex items-center gap-2"><Mail size={14} /> {email}</p>}
           {locations.map((loc, i) => (
             <p key={i} className="ff-body text-sm flex items-start gap-2 mb-1"><MapPin size={14} className="mt-1 shrink-0" /> {loc.label && <strong>{loc.label}: </strong>}{loc.address}</p>
           ))}
@@ -223,7 +223,7 @@ function Footer({ setPage, settings }) {
         </div>
       </div>
       <div className="ff-mono text-xs text-center py-5" style={{ borderTop: `1px solid ${C.steelLine}`, color: "#6B7076" }}>
-        PROTOTYPE — sample content, replace with real catalogue &amp; photos
+        &copy; {new Date().getFullYear()} {settings?.businessName || "MANIK"}. All rights reserved.
       </div>
     </footer>
   );
@@ -281,7 +281,7 @@ function ProductCard({ p, onOpen }) {
         <button onClick={() => onOpen(p)} className="ff-mono text-xs uppercase tracking-wide inline-flex items-center gap-1.5 self-start px-4 py-2" style={{ border: `1px solid ${C.ink}`, color: C.ink }}>
           Request price <ChevronRight size={13} />
         </button>
-        <Link to={`/products/${p.ref}`} className="ff-mono text-xs uppercase tracking-wide underline" style={{ color: C.blueprint }}>
+        <Link to={`/products/${encodeURIComponent(p.ref)}`} className="ff-mono text-xs uppercase tracking-wide underline" style={{ color: C.blueprint }}>
           View full details
         </Link>
       </div>
@@ -320,26 +320,34 @@ function Home({ setPage, openProduct, products, categories, projects, loading, s
             )}
           </div>
         </div>
-        <div style={{ borderTop: `1px solid ${C.steelLine}` }}>
-          <div className="max-w-6xl mx-auto px-5 md:px-8 py-8 grid grid-cols-2 md:grid-cols-4 gap-6">
-            {[
-              [settings?.stats?.years || "10+", "Years experience"],
-              [settings?.stats?.projects || "500+", "Projects supplied"],
-              [settings?.stats?.quality || "100%", "Quality materials"],
-              [settings?.stats?.support || "24/7", "Customer support"],
-            ].map(([n, l]) => (
-              <div key={l}>
-                <p className="ff-display text-2xl md:text-3xl font-semibold" style={{ color: C.safety }}>{n}</p>
-                <p className="ff-mono text-xs uppercase tracking-wide mt-1" style={{ color: C.aluLight }}>{l}</p>
+        {(() => {
+          // Only numbers the owner has actually entered in Settings are shown —
+          // a blank field hides its block instead of showing an invented figure.
+          const stats = [
+            [settings?.stats?.years, "Years experience"],
+            [settings?.stats?.projects, "Projects supplied"],
+            [settings?.stats?.quality, "Quality materials"],
+            [settings?.stats?.support, "Customer support"],
+          ].filter(([n]) => n && String(n).trim());
+          if (stats.length === 0) return null;
+          return (
+            <div style={{ borderTop: `1px solid ${C.steelLine}` }}>
+              <div className="max-w-6xl mx-auto px-5 md:px-8 py-8 grid grid-cols-2 md:grid-cols-4 gap-6">
+                {stats.map(([n, l]) => (
+                  <div key={l}>
+                    <p className="ff-display text-2xl md:text-3xl font-semibold" style={{ color: C.safety }}>{n}</p>
+                    <p className="ff-mono text-xs uppercase tracking-wide mt-1" style={{ color: C.aluLight }}>{l}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          );
+        })()}
       </section>
 
       {/* WHY CHOOSE US */}
       <section className="max-w-6xl mx-auto px-5 md:px-8 py-20">
-        <SectionHead eyebrow="REF 01 — WHY CHOOSE US" title="Why builders choose us" sub="Numbers and claims here should reflect what's genuinely true for the business — swap these in during setup." />
+        <SectionHead eyebrow="REF 01 — WHY CHOOSE US" title="Why builders choose us" sub="What you can expect when you buy from us." />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {[
             [ShieldCheck, "Quality products", "Materials sourced from trusted, reliable manufacturers."],
@@ -485,7 +493,7 @@ function Products({ initialCat, openProduct, products, categories, loading, onSe
   );
 }
 
-function ProductModal({ product, onClose, products }) {
+function ProductModal({ product, onClose, products, whatsapp }) {
   if (!product) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "#00000088" }} onClick={onClose}>
@@ -507,7 +515,7 @@ function ProductModal({ product, onClose, products }) {
           </div>
         )}
         <p className="ff-mono text-xs uppercase tracking-wide mb-3" style={{ color: "#6B6960" }}>Request a price for this item</p>
-        <QuoteForm presetProduct={product.name} products={products} />
+        <QuoteForm presetProduct={product.name} products={products} whatsapp={whatsapp || WHATSAPP_NUMBER} />
       </div>
     </div>
   );
@@ -570,7 +578,7 @@ function About({ setPage, settings }) {
   return (
     <div>
       <div className="max-w-6xl mx-auto px-5 md:px-8 py-16">
-        <SectionHead eyebrow="OUR STORY" title="About MANIK" sub="Replace this with the owner's real history, values and what makes the business different." />
+        <SectionHead eyebrow="OUR STORY" title="About MANIK" sub="Who we are and how we work." />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-16">
           <div>
             <h3 className="ff-display font-semibold text-lg mb-3" style={{ color: C.ink }}>What we do</h3>
@@ -585,14 +593,20 @@ function About({ setPage, settings }) {
             </p>
           </div>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
-          {[["10+", "Years"], ["500+", "Projects"], ["1000+", "Products moved"], ["50+", "Contractors served"]].map(([n, l]) => (
-            <div key={l} className="p-6 text-center" style={{ background: C.concreteD }}>
-              <p className="ff-display text-2xl font-semibold" style={{ color: C.safety }}>{n}</p>
-              <p className="ff-mono text-xs uppercase tracking-wide mt-1" style={{ color: "#6B6960" }}>{l}</p>
+        {(() => {
+          const stats = [[settings?.stats?.years, "Years"], [settings?.stats?.projects, "Projects"]].filter(([n]) => n && String(n).trim());
+          if (stats.length === 0) return <div className="mb-8" />;
+          return (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+              {stats.map(([n, l]) => (
+                <div key={l} className="p-6 text-center" style={{ background: C.concreteD }}>
+                  <p className="ff-display text-2xl font-semibold" style={{ color: C.safety }}>{n}</p>
+                  <p className="ff-mono text-xs uppercase tracking-wide mt-1" style={{ color: "#6B6960" }}>{l}</p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          );
+        })()}
         <SolidBtn onClick={() => setPage("contact")} icon={ArrowRight}>Work with us</SolidBtn>
       </div>
     </div>
@@ -603,7 +617,7 @@ function Contact({ products, settings }) {
   const address = settings?.address || "Gwaraka, Aluminum Village, Habitat Plaza";
   const phone = settings?.phone || "+234 806 098 4868";
   const phone2 = settings?.phone2 || "";
-  const email = settings?.email || "hello@manikmaterials.ng";
+  const email = settings?.email || "";
   const hours = settings?.hours || "Mon – Sat, 8am – 6pm";
   const whatsapp = settings?.whatsapp || WHATSAPP_NUMBER;
   const locations = settings?.locations?.length ? settings.locations : [{ label: "", address: "Gwaraka, Aluminum Village, Habitat Plaza" }];
@@ -612,7 +626,7 @@ function Contact({ products, settings }) {
       <SectionHead eyebrow="GET IN TOUCH" title="Request a quote" sub="Tell us what you need — quantity, colour, size, deadline — and we'll get back to you." />
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
         <div className="md:col-span-2">
-          <QuoteForm products={products} />
+          <QuoteForm products={products} whatsapp={whatsapp} />
         </div>
         <div className="space-y-6">
           <div className="p-6" style={{ background: C.concreteD }}>
@@ -623,20 +637,20 @@ function Contact({ products, settings }) {
               </p>
             ))}
             <p className="ff-body text-sm mb-3 flex items-center gap-2" style={{ color: C.ink }}><Phone size={15} /> {phone}{phone2 && ` / ${phone2}`}</p>
-            <p className="ff-body text-sm mb-3 flex items-center gap-2" style={{ color: C.ink }}><Mail size={15} /> {email}</p>
+            {email && <p className="ff-body text-sm mb-3 flex items-center gap-2" style={{ color: C.ink }}><Mail size={15} /> {email}</p>}
             <p className="ff-body text-sm flex items-center gap-2" style={{ color: C.ink }}><Clock size={15} /> {hours}</p>
           </div>
           <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 p-4 text-sm font-medium text-white" style={{ background: "#25D366" }}>
             <MessageCircle size={16} /> Chat on WhatsApp
           </a>
-          {locations.filter(loc => loc.mapEmbedUrl).map((loc, i) => (
+          {locations.filter(loc => /^https:\/\/(www\.google\.com\/maps\/embed|maps\.google\.com\/maps)/.test(loc.mapEmbedUrl || "")).map((loc, i) => (
             <div key={i}>
               {loc.label && <p className="ff-mono text-xs uppercase tracking-wide mb-2" style={{ color: "#6B6960" }}>{loc.label}</p>}
               <div className="overflow-hidden" style={{ border: `1px solid ${C.ink}22` }}>
                 <iframe
                   src={loc.mapEmbedUrl}
                   width="100%" height="200" style={{ border: 0 }}
-                  loading="lazy" title={loc.label || "MANIK location map"}
+                  loading="lazy" referrerPolicy="no-referrer-when-downgrade" title={loc.label || "MANIK location map"}
                 />
               </div>
             </div>
@@ -658,6 +672,7 @@ function MainApp() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const [products, setProducts] = useState([]);
+  const [searchResults, setSearchResults] = useState(null); // null = not searching
   const [categories, setCategories] = useState([]);
   const [projects, setProjects] = useState([]);
   const [settings, setSettings] = useState(null);
@@ -687,13 +702,19 @@ function MainApp() {
   }, []);
 
   // Re-fetch products whenever a search is run, without re-fetching everything else
+  // The full catalogue stays in `products` (used by the home page and the quote
+  // form's product list); search results live separately, and a failed search
+  // shows "no results" instead of replacing the whole page with an error.
   const handleSearch = async (term) => {
     setSearchTerm(term);
+    if (!term.trim()) {
+      setSearchResults(null);
+      return;
+    }
     try {
-      const p = await api.getProducts(term);
-      setProducts(p);
-    } catch (err) {
-      setLoadError(err.message);
+      setSearchResults(await api.getProducts(term.trim()));
+    } catch {
+      setSearchResults([]);
     }
   };
 
@@ -727,7 +748,7 @@ function MainApp() {
       ) : (
         <>
           {page === "home" && <Home setPage={setPage} openProduct={setModalProduct} products={products} categories={categories} projects={projects} loading={loading} settings={settings} />}
-          {page === "products" && <Products initialCat={presetCat} openProduct={setModalProduct} products={products} categories={categories} loading={loading} onSearch={handleSearch} />}
+          {page === "products" && <Products initialCat={presetCat} openProduct={setModalProduct} products={searchResults ?? products} categories={categories} loading={loading} onSearch={handleSearch} />}
           {page === "services" && <Services setPage={setPage} />}
           {page === "projects" && <Projects projects={projects} loading={loading} />}
           {page === "about" && <About setPage={setPage} settings={settings} />}
@@ -736,7 +757,7 @@ function MainApp() {
       )}
       <Footer setPage={setPage} settings={settings} />
       <WhatsAppFloat settings={settings} />
-      <ProductModal product={modalProduct} onClose={() => setModalProduct(null)} products={products} />
+      <ProductModal product={modalProduct} onClose={() => setModalProduct(null)} products={products} whatsapp={settings?.whatsapp} />
     </div>
   );
 }
