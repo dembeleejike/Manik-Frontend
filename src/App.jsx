@@ -710,6 +710,7 @@ function MainApp() {
     if (!term.trim()) {
       setSearchResults(null);
       return;
+      
     }
     try {
       setSearchResults(await api.getProducts(term.trim()));
